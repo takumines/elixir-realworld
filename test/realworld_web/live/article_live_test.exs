@@ -62,7 +62,10 @@ defmodule RealworldWeb.ArticleLiveTest do
     end
 
     test "updates article within modal", %{conn: conn, article: article} do
-      {:ok, show_live, _html} = live(conn, ~p"/articles/#{article}")
+      {:ok, show_live, _html} =
+        conn
+        |> log_in_user(Realworld.Repo.preload(article, :author).author)
+        |> live(~p"/articles/#{article}")
 
       assert show_live |> element("a", "Edit") |> render_click() =~
                "Edit Article"
@@ -82,6 +85,42 @@ defmodule RealworldWeb.ArticleLiveTest do
       html = render(show_live)
       assert html =~ "Article updated successfully"
       assert html =~ "some updated title"
+    end
+
+    test "deletes article", %{conn: conn, article: article} do
+      {:ok, show_live, _html} =
+        conn
+        |> log_in_user(Realworld.Repo.preload(article, :author).author)
+        |> live(~p"/articles/#{article}")
+
+      assert show_live |> element("a", "Delete") |> render_click()
+      assert_redirect(show_live, ~p"/articles")
+
+      {:ok, _index, html} = live(conn, ~p"/articles")
+
+      refute html =~ "/articles/#{article.id}"
+    end
+
+    test "creates comment", %{conn: conn, article: article} do
+      author = user_fixture()
+
+      {:ok, show_live, _html} =
+        conn
+        |> log_in_user(author)
+        |> live(~p"/articles/#{article}")
+
+      assert show_live
+             |> form("#comment-form", comment: %{body: ""})
+             |> render_change() =~ "can&#39;t be blank"
+
+      assert show_live
+             |> form("#comment-form", comment: %{body: "some comment"})
+             |> render_submit()
+
+      html = render(show_live)
+
+      assert html =~ author.email
+      assert html =~ "some comment"
     end
   end
 end
