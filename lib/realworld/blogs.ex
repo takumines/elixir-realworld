@@ -36,7 +36,7 @@ defmodule Realworld.Blogs do
 
   """
   def get_article!(id) do
-    Repo.get!(Article, id) |> Repo.preload(:tags)
+    Repo.get!(Article, id) |> Repo.preload([:tags, comments: :author])
   end
 
   @doc """
