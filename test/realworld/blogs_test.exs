@@ -64,6 +64,7 @@ defmodule Realworld.BlogsTest do
     alias Realworld.Blogs.Comment
 
     import Realworld.BlogsFixtures
+    import Realworld.AccountsFixtures
 
     @invalid_attrs %{body: nil}
 
@@ -78,7 +79,11 @@ defmodule Realworld.BlogsTest do
     end
 
     test "create_comment/1 with valid data creates a comment" do
-      valid_attrs = %{body: "some body", article_id: article_fixture().id}
+      valid_attrs = %{
+        body: "some body",
+        article_id: article_fixture().id,
+        author_id: user_fixture().id
+      }
 
       assert {:ok, %Comment{} = comment} = Blogs.create_comment(valid_attrs)
       assert comment.body == "some body"
@@ -170,6 +175,7 @@ defmodule Realworld.BlogsTest do
 
     test "list_articles_by_tag/1" do
       author_id = user_fixture().id
+
       {:ok, %{article: a1}} =
         Blogs.insert_article_with_tags(%{
           title: "t",
